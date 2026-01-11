@@ -1,0 +1,98 @@
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+
+local flying = false
+local speed = 50 
+local bv = Instance.new("BodyVelocity")
+local bg = Instance.new("BodyGyro")
+
+-- Tabel untuk menyimpan status tombol yang sedang ditekan
+local keys = {w = false, s = false, a = false, d = false, space = false, lshift = false}
+
+-- Fungsi Transparansi
+function setTransparency(value)
+    local char = player.Character
+    if char then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+                part.Transparency = value
+            end
+        end
+    end
+end
+
+function startFlying()
+    flying = true
+    local character = player.Character
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    
+    setTransparency(1) -- Jadi hantu
+    
+    bg.MaxTorque = Vector3.new(400000, 400000, 400000)
+    bg.P = 9e4
+    bg.Parent = root
+    
+    bv.MaxForce = Vector3.new(400000, 400000, 400000)
+    bv.Parent = root
+    
+    spawn(function()
+        while flying do
+            local camera = workspace.CurrentCamera
+            bg.CFrame = camera.CFrame
+            
+            -- Logika Arah Gerak
+            local newVelocity = Vector3.new(0, 0.1, 0)
+            
+            if keys.w then newVelocity = newVelocity + (camera.CFrame.LookVector * speed) end
+            if keys.s then newVelocity = newVelocity - (camera.CFrame.LookVector * speed) end
+            if keys.a then newVelocity = newVelocity - (camera.CFrame.RightVector * speed) end
+            if keys.d then newVelocity = newVelocity + (camera.CFrame.RightVector * speed) end
+            if keys.space then newVelocity = newVelocity + (Vector3.new(0, 1, 0) * speed) end
+            if keys.lshift then newVelocity = newVelocity - (Vector3.new(0, 1, 0) * speed) end
+            
+            bv.Velocity = newVelocity
+            
+            -- Noclip Otomatis
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+            task.wait()
+        end
+        bv.Parent = nil
+        bg.Parent = nil
+        setTransparency(0) -- Balik normal
+    end)
+end
+
+-- Deteksi Tombol Ditekan
+mouse.KeyDown:Connect(function(key)
+    local k = key:lower()
+    if k == "e" then
+        if flying then flying = false else startFlying() end
+    elseif keys[k] ~= nil then
+        keys[k] = true
+    elseif key == " " then -- Deteksi Space
+        keys.space = true
+    end
+end)
+
+-- Deteksi Tombol Dilepas
+mouse.KeyUp:Connect(function(key)
+    local k = key:lower()
+    if keys[k] ~= nil then
+        keys[k] = false
+    elseif key == " " then
+        keys.space = false
+    end
+end)
+
+-- Khusus Shift (karena kadang key:lower() lshift agak beda)
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.LeftShift then keys.lshift = true end
+end)
+game:GetService("UserInputService").InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.LeftShift then keys.lshift = false end
+end)
