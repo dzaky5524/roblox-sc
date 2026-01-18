@@ -1,25 +1,49 @@
 local player = game.Players.LocalPlayer
-local pGui = player:WaitForChild("PlayerGui")
-local target = pGui:FindFirstChild("OpenAnimation")
+local openAnimation = player.PlayerGui:WaitForChild("OpenAnimation")
+local runService = game:GetService("RunService")
 
-if target then
-    -- Kita buat folder "Tempat Sampah" yang tidak akan pernah dirender oleh game
-    local bin = Instance.new("Folder")
-    bin.Name = "HiddenTrash"
-    bin.Parent = game:GetService("LogService") -- Tempat yang jarang dicek anti-cheat
-    
-    -- Pindahkan foldernya ke sana
-    target.Parent = bin
-    print("Folder OpenAnimation sudah dibuang ke HiddenTrash!")
-else
-    warn("Folder OpenAnimation tidak ditemukan, mungkin sudah pindah?")
+print("Menjalankan V5: ZIndex Destroyer...")
+
+-- Fungsi untuk menyiksa UI agar tidak terlihat
+local function destroyVisuals(obj)
+    if obj:IsA("GuiObject") then
+        obj.Visible = false
+        obj.Transparency = 1
+        obj.BackgroundTransparency = 1
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+            obj.TextTransparency = 1
+        elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
+            obj.ImageTransparency = 1
+        end
+    elseif obj:IsA("ScreenGui") then
+        obj.Enabled = false
+        obj.DisplayOrder = -999 -- Pindah ke urutan paling belakang (di balik map)
+    end
 end
 
--- Mencegah game membuat folder OpenAnimation baru
-pGui.ChildAdded:Connect(function(child)
-    if child.Name == "OpenAnimation" then
-        task.wait()
-        child.Parent = game:GetService("LogService")
-        print("Folder baru terdeteksi dan langsung dibuang!")
+-- Looping agresif agar script game-nya tidak bisa menyalakan lagi
+runService.RenderStepped:Connect(function()
+    for _, v in pairs(openAnimation:GetDescendants()) do
+        destroyVisuals(v)
+    end
+    
+    -- Mencoba mematikan ScreenGui utamanya juga
+    if openAnimation:FindFirstChild("CaseOpeningScreen") then
+        openAnimation.CaseOpeningScreen.Enabled = false
+        openAnimation.CaseOpeningScreen.DisplayOrder = -999
+    end
+    
+    if openAnimation:FindFirstChild("EndPreview") then
+        openAnimation.EndPreview.Enabled = false
+        openAnimation.EndPreview.DisplayOrder = -999
     end
 end)
+
+-- Hancurkan Sound yang menyebalkan
+for _, s in pairs(game:GetService("SoundService"):GetDescendants()) do
+    if s.Name:lower():find("open") or s.Name:lower():find("unbox") then
+        s.Volume = 0
+    end
+end
+
+print("Done! Harusnya layar sekarang bersih meskipun unbox jalan.")
