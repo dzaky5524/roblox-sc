@@ -1,0 +1,27 @@
+local player = game.Players.LocalPlayer
+local openAnimation = player.PlayerGui:WaitForChild("OpenAnimation")
+
+-- Fungsi untuk mematikan layar animasi
+local function skipIt()
+    -- Matikan layar putaran
+    local screen = openAnimation:FindFirstChild("CaseOpeningScreen")
+    if screen then
+        screen.Enabled = false
+    end
+    
+    -- Matikan preview hadiah di akhir (biar bisa langsung klik open lagi)
+    local preview = openAnimation:FindFirstChild("EndPreview")
+    if preview then
+        preview.Enabled = false
+    end
+end
+
+-- Jalankan fungsi setiap kali ada perubahan di folder OpenAnimation
+openAnimation.DescendantAdded:Connect(function()
+    skipIt()
+end)
+
+-- Jalankan sekali di awal untuk jaga-jaga
+skipIt()
+
+print("Skip Animasi Aktif! Folder OpenAnimation telah diblokir.")
