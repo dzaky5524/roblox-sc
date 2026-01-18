@@ -1,34 +1,25 @@
 local player = game.Players.LocalPlayer
-local openAnim = player.PlayerGui:WaitForChild("OpenAnimation")
+local pGui = player:WaitForChild("PlayerGui")
+local target = pGui:FindFirstChild("OpenAnimation")
 
-print("Menjalankan Metode Hardcore Skip...")
-
-game:GetService("RunService").RenderStepped:Connect(function()
-    -- 1. Paksa matikan ScreenGui-nya
-    local opening = openAnim:FindFirstChild("CaseOpeningScreen")
-    local preview = openAnim:FindFirstChild("EndPreview")
+if target then
+    -- Kita buat folder "Tempat Sampah" yang tidak akan pernah dirender oleh game
+    local bin = Instance.new("Folder")
+    bin.Name = "HiddenTrash"
+    bin.Parent = game:GetService("LogService") -- Tempat yang jarang dicek anti-cheat
     
-    if opening then 
-        opening.Enabled = false 
-        -- 2. Bikin semua gambar/tulisan di dalamnya jadi transparan total
-        for _, v in pairs(opening:GetDescendants()) do
-            if v:IsA("GuiObject") then v.Visible = false end
-        end
-    end
-    
-    if preview then 
-        preview.Enabled = false 
-        for _, v in pairs(preview:GetDescendants()) do
-            if v:IsA("GuiObject") then v.Visible = false end
-        end
-    end
-end)
-
--- 3. Hapus suara unbox agar tidak berisik saat spam
-for _, s in pairs(game:GetService("SoundService"):GetDescendants()) do
-    if s:IsA("Sound") and s.Name:lower():find("open") then
-        s:Destroy()
-    end
+    -- Pindahkan foldernya ke sana
+    target.Parent = bin
+    print("Folder OpenAnimation sudah dibuang ke HiddenTrash!")
+else
+    warn("Folder OpenAnimation tidak ditemukan, mungkin sudah pindah?")
 end
 
-print("Metode Hardcore Aktif. Coba buka case sekarang!")
+-- Mencegah game membuat folder OpenAnimation baru
+pGui.ChildAdded:Connect(function(child)
+    if child.Name == "OpenAnimation" then
+        task.wait()
+        child.Parent = game:GetService("LogService")
+        print("Folder baru terdeteksi dan langsung dibuang!")
+    end
+end)
