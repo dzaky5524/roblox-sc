@@ -1,27 +1,34 @@
 local player = game.Players.LocalPlayer
-local openAnimation = player.PlayerGui:WaitForChild("OpenAnimation")
+local openAnim = player.PlayerGui:WaitForChild("OpenAnimation")
 
--- Fungsi untuk mematikan layar animasi
-local function skipIt()
-    -- Matikan layar putaran
-    local screen = openAnimation:FindFirstChild("CaseOpeningScreen")
-    if screen then
-        screen.Enabled = false
+print("Menjalankan Metode Hardcore Skip...")
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    -- 1. Paksa matikan ScreenGui-nya
+    local opening = openAnim:FindFirstChild("CaseOpeningScreen")
+    local preview = openAnim:FindFirstChild("EndPreview")
+    
+    if opening then 
+        opening.Enabled = false 
+        -- 2. Bikin semua gambar/tulisan di dalamnya jadi transparan total
+        for _, v in pairs(opening:GetDescendants()) do
+            if v:IsA("GuiObject") then v.Visible = false end
+        end
     end
     
-    -- Matikan preview hadiah di akhir (biar bisa langsung klik open lagi)
-    local preview = openAnimation:FindFirstChild("EndPreview")
-    if preview then
-        preview.Enabled = false
+    if preview then 
+        preview.Enabled = false 
+        for _, v in pairs(preview:GetDescendants()) do
+            if v:IsA("GuiObject") then v.Visible = false end
+        end
+    end
+end)
+
+-- 3. Hapus suara unbox agar tidak berisik saat spam
+for _, s in pairs(game:GetService("SoundService"):GetDescendants()) do
+    if s:IsA("Sound") and s.Name:lower():find("open") then
+        s:Destroy()
     end
 end
 
--- Jalankan fungsi setiap kali ada perubahan di folder OpenAnimation
-openAnimation.DescendantAdded:Connect(function()
-    skipIt()
-end)
-
--- Jalankan sekali di awal untuk jaga-jaga
-skipIt()
-
-print("Skip Animasi Aktif! Folder OpenAnimation telah diblokir.")
+print("Metode Hardcore Aktif. Coba buka case sekarang!")
